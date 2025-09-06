@@ -1,0 +1,110 @@
+openapi: 3.0.3
+info:
+  title: NHL Bulk Stats + Season Resolver
+  version: "1.2.0"
+  description: |
+    Bulk NHL player season stats for skaters and goalies using NHL's public endpoints.
+    Includes season resolver (current/last/next) and config endpoint for field discovery.
+servers:
+  - url: https://api.nhle.com/stats/rest
+    description: Bulk stats (reports service)
+  - url: https://statsapi.web.nhl.com/api/v1
+    description: Official seasons metadata (authoritative season list/current)
+paths:
+  /en/skater/summary:
+    get:
+      operationId: getSkaterSummary
+      summary: Skater season summary (bulk, paginated)
+      description: |
+        Returns skater season aggregates. Use cayenneExp to filter, e.g.:
+        seasonId=20242025 and gameTypeId=2 (regular season).
+      parameters:
+        - $ref: '#/components/parameters/cayenneExp'
+        - $ref: '#/components/parameters/factCayenneExp'
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        "200":
+          description: JSON rows of skater stats
+  /en/goalie/summary:
+    get:
+      operationId: getGoalieSummary
+      summary: Goalie season summary (bulk, paginated)
+      description: |
+        Returns goalie season aggregates. Use cayenneExp to filter, e.g.:
+        seasonId=20242025 and gameTypeId=2 (regular season).
+      parameters:
+        - $ref: '#/components/parameters/cayenneExp'
+        - $ref: '#/components/parameters/factCayenneExp'
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        "200":
+          description: JSON rows of goalie stats
+  /en/config:
+    get:
+      operationId: getReportConfig
+      summary: Report config (field discovery)
+      description: Use to inspect available report names and column keys for mapping.
+      responses:
+        "200":
+          description: Report metadata/config
+  /seasons/current:
+    get:
+      operationId: getCurrentSeason
+      summary: Current NHL season (YYYYYYYY)
+      description: Returns the current season id and dates.
+      responses:
+        "200":
+          description: Current season object
+  /seasons:
+    get:
+      operationId: listSeasons
+      summary: List seasons
+      description: Full list of seasons with start/end dates.
+      responses:
+        "200":
+          description: Array of seasons
+components:
+  parameters:
+    cayenneExp:
+      name: cayenneExp
+      in: query
+      required: true
+      schema:
+        type: string
+      example: seasonId=20252026 and gameTypeId=2
+      description: |
+        Report filter expression. Typical: "seasonId=YYYYYYYY and gameTypeId=2".
+    factCayenneExp:
+      name: factCayenneExp
+      in: query
+      required: false
+      schema:
+        type: string
+      example: gamesPlayed>=1
+      description: Optional extra filter, e.g. "gamesPlayed>=1".
+    start:
+      name: start
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: Pagination start index.
+    limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 500
+      description: Rows per page. Use pagination; avoid -1 for stability.
+    sort:
+      name: sort
+      in: query
+      schema:
+        type: string
+      example: points DESC
+      description: Optional sort (depends on report).
